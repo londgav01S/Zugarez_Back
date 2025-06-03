@@ -1,6 +1,8 @@
 package co.edu.uniquindio.zugarez.Controllers;
 
 import co.edu.uniquindio.zugarez.Model.Entrada_Salida;
+import co.edu.uniquindio.zugarez.Model.HistorialPedidoDTO;
+import co.edu.uniquindio.zugarez.Model.PedidoProveedorDTO;
 import co.edu.uniquindio.zugarez.Model.Producto;
 import co.edu.uniquindio.zugarez.Repositories.EntradaSalidaRepository;
 import co.edu.uniquindio.zugarez.Repositories.ProductoRepository;
@@ -37,26 +39,51 @@ public class EntradaSalidaController {
     }
 
 
-    @GetMapping("/historial-pedidos")
-    public ResponseEntity<List<Entrada_Salida>> obtenerHistorialPedidos() {
-        List<Entrada_Salida> pedidos = entradaSalidaRepository.findByTipo("PEDIDO");
-        return ResponseEntity.ok(pedidos);
-    }
+@GetMapping("/historial-pedidos")
+public ResponseEntity<List<HistorialPedidoDTO>> obtenerHistorialPedidos() {
+    List<Entrada_Salida> pedidos = entradaSalidaRepository.findByTipo("PEDIDO");
+    List<HistorialPedidoDTO> respuesta = pedidos.stream().map(pedido -> {
+        HistorialPedidoDTO dto = new HistorialPedidoDTO();
+        dto.id = pedido.getId();
+        dto.descripcion = pedido.getDescripcion();
+        dto.fecha = pedido.getFecha();
+        dto.categoria = pedido.getCategoria();
+        dto.cantidad = pedido.getCantidad();
+        dto.tipo = pedido.getTipo();
+        if (pedido.getProducto() != null) {
+            dto.productoId = pedido.getProducto().getId();
+            dto.nombreProducto = pedido.getProducto().getNombre();
+        }
+        return dto;
+    }).toList();
+    return ResponseEntity.ok(respuesta);
+}
 
     @PostMapping("/pedido")
-    public ResponseEntity<?> registrarPedidoProveedor(@RequestBody Entrada_Salida pedido) {
-        Optional<Producto> productoOpt = productoRepository.findById(pedido.getId());
+    public ResponseEntity<?> registrarPedidoProveedor(@RequestBody PedidoProveedorDTO pedidoDTO) {
+        if (pedidoDTO.productoId == null) {
+            return ResponseEntity.badRequest().body("ID de producto no proporcionado");
+        }
+
+        Optional<Producto> productoOpt = productoRepository.findById(pedidoDTO.productoId);
 
         if (productoOpt.isEmpty()) {
             return ResponseEntity.badRequest().body("Producto no encontrado");
         }
 
         Producto producto = productoOpt.get();
-        if (pedido.getProducto().getMinimoPedido() < producto.getMinimoPedido()) {
+        if (pedidoDTO.cantidad < producto.getMinimoPedido()) {
             return ResponseEntity.badRequest().body("La cantidad es menor al mínimo permitido para este producto (" + producto.getMinimoPedido() + ")");
         }
 
+        Entrada_Salida pedido = new Entrada_Salida();
+        pedido.setProducto(producto);
+        pedido.setCantidad(pedidoDTO.cantidad);
+        pedido.setFecha(pedidoDTO.fecha);
+        pedido.setCategoria(pedidoDTO.categoria);
+        pedido.setDescripcion(pedidoDTO.descripcion);
         pedido.setTipo("PEDIDO");
+
         return ResponseEntity.ok(entradaSalidaRepository.save(pedido));
     }
 
