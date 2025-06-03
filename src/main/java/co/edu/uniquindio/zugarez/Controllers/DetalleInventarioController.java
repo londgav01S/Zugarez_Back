@@ -1,6 +1,8 @@
 package co.edu.uniquindio.zugarez.Controllers;
 
 import co.edu.uniquindio.zugarez.Model.DetalleInventario;
+import co.edu.uniquindio.zugarez.Model.Producto;
+import co.edu.uniquindio.zugarez.Repositories.DetalleInventarioRepository;
 import co.edu.uniquindio.zugarez.Repositories.ProductoRepository;
 import co.edu.uniquindio.zugarez.Services.DetalleInventarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class DetalleInventarioController {
     @Autowired
     private ProductoRepository productoRepository;
 
+    @Autowired
+    private DetalleInventarioRepository detalleInventarioRepository;
+
     @GetMapping
     public ResponseEntity<List<DetalleInventario>> getAll() {
         return ResponseEntity.ok(detalleInventarioService.getAll());
@@ -27,12 +32,14 @@ public class DetalleInventarioController {
 
     @PostMapping("/{productoId}")
     @CrossOrigin(origins = "http://localhost:3000")
-    public ResponseEntity<DetalleInventario> create(
-            @PathVariable String productoId,
-            @RequestBody DetalleInventario detalle) {
+    public DetalleInventario create(String productoId, DetalleInventario detalle) {
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-        return ResponseEntity.ok(detalleInventarioService.create(productoId, detalle));
+        detalle.setProducto(producto);
+        return detalleInventarioRepository.save(detalle);
     }
+
 
     @PutMapping("/{id}")
     @CrossOrigin(origins = "http://localhost:3000")

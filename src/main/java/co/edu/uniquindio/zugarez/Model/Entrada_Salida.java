@@ -22,5 +22,8 @@ public class Entrada_Salida {
     private String categoria;
     private DetalleProductoCompraCliente detalleProductoCompraCliente;
     private Producto producto;
+    private String tipo; // "ENTRADA" o "SALIDA"
+    private int cantidad;
+
 
 }

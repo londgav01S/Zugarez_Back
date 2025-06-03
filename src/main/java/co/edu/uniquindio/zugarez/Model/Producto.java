@@ -25,6 +25,7 @@ public class Producto {
     private String fechaVencimiento;
     private String estado;
     private DetalleInventario detalleInventario;
+    private int minimoPedido=1;
     private ArrayList<Entrada_Salida> ltsEntrada;
     private ArrayList<Entrada_Salida> ltsSalida;
 }

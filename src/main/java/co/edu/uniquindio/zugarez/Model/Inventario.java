@@ -19,6 +19,7 @@ public class Inventario {
     @Id
     private String id;
     private String fechaActualizacion;
+    private String fechaVerificacion;
     private String estado;
     private String descripcion;
     private ArrayList<Entrada_Salida> lstEntrada;
